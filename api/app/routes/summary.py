@@ -20,7 +20,7 @@ def fetch_payments(
 ) -> list[PaymentEntry]:
     min_score = from_.timestamp() if from_ else "-inf"
     max_score = to.timestamp() if to else "+inf"
-    raw = redis.zrangebyscore(
+    raw: list = redis.zrangebyscore(
         name=settings.REDIS_PAYMENTS_KEY, min=min_score, max=max_score
     )
     return [PaymentEntry(**json.loads(entry)) for entry in raw]
