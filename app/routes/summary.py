@@ -26,7 +26,7 @@ def fetch_payments(
     return [PaymentEntry(**json.loads(entry)) for entry in raw]
 
 
-@router.post(
+@router.get(
     path="",
     response_model=SummaryResponse,
     summary="Return a summary of processed payments within an optional time range",
