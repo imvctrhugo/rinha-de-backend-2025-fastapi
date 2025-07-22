@@ -21,7 +21,7 @@ services:
 
   api1: &api
     image: rinha_vh_fastapi
-    build: .
+    build: api
     hostname: api1
     environment:
       - PAYMENT_PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
@@ -30,8 +30,7 @@ services:
       - backend
       - payment-processor
     depends_on:
-      redis:
-        condition: service_healthy
+      - worker
     deploy:
       resources:
         limits:
@@ -44,6 +43,21 @@ services:
     environment:
       - PAYMENT_PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080
+
+  worker:
+    build: worker
+    container_name: worker
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+      - payment-processor
+    deploy:
+      resources:
+        limits:
+          cpus: "0.6"
+          memory: "50MB"
 
   redis:
     image: redis:7.2-alpine

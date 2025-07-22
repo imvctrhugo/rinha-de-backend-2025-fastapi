@@ -1,0 +1,13 @@
+# list all targets and exit
+default: 
+    just --list
+
+# format python code
+format:
+    poetry run isort .
+    poetry run black .
+
+validate: 
+    poetry run isort --check-only .
+    poetry run black --check .
+    poetry run mypy .

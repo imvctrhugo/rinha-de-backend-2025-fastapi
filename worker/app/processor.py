@@ -1,25 +1,22 @@
 from datetime import UTC
 from datetime import datetime as dt
-from uuid import UUID
 
-from fastapi import status
-from httpx import Client, Response
-from pydantic import BaseModel
+from config import settings
+from httpx import Client as HttpxClient
+from httpx import Response
+from models import (
+    PaymentEntry,
+    PaymentProcessorAPIRequest,
+    PaymentProcessorType,
+    ProcessPaymentRequest,
+)
 from redis import Redis
 
-from ..config import settings
-from ..models.payments import ProcessPaymentRequest
-from ..shared.model import PaymentEntry, PaymentProcessorType
-
-
-class PaymentProcessorAPIRequest(BaseModel):
-    correlationId: UUID
-    amount: float
-    requestedAt: dt
+HTTP_200_OK = 200
 
 
 class PaymentProcessor:
-    def __init__(self, http: Client, redis: Redis, request: ProcessPaymentRequest):
+    def __init__(self, http: HttpxClient, redis: Redis, request: ProcessPaymentRequest):
         self.http = http
         self.redis = redis
         self.request = request
@@ -58,9 +55,11 @@ class PaymentProcessor:
             (PaymentProcessorType.fallback, settings.PAYMENT_PROCESSOR_FALLBACK_URL),
         ]
 
-        while True:
-            for processor_type, url in processors:
-                response = self._send_to_processor(url)
-                if response and response.status_code == status.HTTP_200_OK:
-                    self._store_payment(processor_type)
-                    return  # Success — exit
+        for processor_type, url in processors:
+            response = self._send_to_processor(url)
+            if response and response.status_code == HTTP_200_OK:
+                self._store_payment(processor_type)
+                return
+
+        # If none succeeded, raise so the worker can re-queue
+        raise RuntimeError("All payment processors failed")
