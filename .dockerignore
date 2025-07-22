@@ -1,0 +1,8 @@
+# Ignore
+*
+
+# Include
+!pyproject.toml
+!poetry.lock
+!app
+!.env

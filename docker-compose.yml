@@ -1,0 +1,47 @@
+services:
+
+  api1: &api
+    image: rinha_vh_fastapi
+    build: .
+    ports:
+      - "8000:8000"
+    hostname: api1
+    environment:
+      - PAYMENT_PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
+      - PAYMENT_PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080
+    networks:
+      - backend
+      - payment-processor
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.55"
+          memory: "50MB"
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    command: redis-server --save "" --appendonly no --maxclients 20000
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "275MB"
+
+networks:
+  backend:
+    driver: bridge
+  payment-processor:
+    external: true

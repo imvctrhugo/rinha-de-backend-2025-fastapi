@@ -14,3 +14,8 @@ up *flags="":
 format:
     poetry run isort .
     poetry run black .
+
+validate: 
+    poetry run isort --check-only .
+    poetry run black --check .
+    poetry run mypy .

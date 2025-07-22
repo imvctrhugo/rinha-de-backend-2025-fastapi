@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
+from httpx import Client
 from redis import Redis
 
 from ..models.payments import ProcessPaymentRequest
-from ..shared.dependency import get_redis
-from ..config import settings
+from ..processors.payment import PaymentProcessor
+from ..shared.dependency import get_http, get_redis
 
 router = APIRouter(prefix="/payments")
 
@@ -15,6 +16,12 @@ router = APIRouter(prefix="/payments")
 )
 async def process_payment(
     request: ProcessPaymentRequest,
+    background_tasks: BackgroundTasks,
+    http: Client = Depends(get_http),
     redis: Redis = Depends(get_redis),
 ) -> None:
-    redis.lpush(settings.QUEUE_NAME, request.model_dump_json())
+    # Payment process will run in the background after the response is sent.
+    payment_processor = PaymentProcessor(http=http, redis=redis, request=request)
+    background_tasks.add_task(payment_processor.process_payment)
+
+    return
