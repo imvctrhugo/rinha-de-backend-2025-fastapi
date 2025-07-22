@@ -1,10 +1,27 @@
 services:
 
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api1
+      - api2
+    ports:
+      - "9999:9999"
+    networks:
+      - backend
+      - payment-processor
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "30MB"
+
   api1: &api
     image: rinha_vh_fastapi
     build: .
-    ports:
-      - "8000:8000"
     hostname: api1
     environment:
       - PAYMENT_PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
@@ -18,8 +35,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.55"
-          memory: "50MB"
+          cpus: "0.6"
+          memory: "140MB"
+  
+  api2:
+    <<: *api
+    hostname: api2
+    environment:
+      - PAYMENT_PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
+      - PAYMENT_PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080
 
   redis:
     image: redis:7.2-alpine
@@ -37,8 +61,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: "275MB"
+          cpus: "0.1"
+          memory: "40MB"
 
 networks:
   backend:
