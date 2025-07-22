@@ -16,8 +16,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "30MB"
+          cpus: "0.1"
+          memory: "20MB"
 
   api1: &api
     image: rinha_vh_fastapi
@@ -34,12 +34,19 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.6"
-          memory: "140MB"
+          cpus: "0.2"
+          memory: "80MB"
   
   api2:
     <<: *api
     hostname: api2
+    environment:
+      - PAYMENT_PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
+      - PAYMENT_PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080
+  
+  api3:
+    <<: *api
+    hostname: api3
     environment:
       - PAYMENT_PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080
@@ -56,8 +63,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.6"
-          memory: "50MB"
+          cpus: "0.7"
+          memory: "60MB"
 
   redis:
     image: redis:7.2-alpine
@@ -76,7 +83,7 @@ services:
       resources:
         limits:
           cpus: "0.1"
-          memory: "40MB"
+          memory: "30MB"
 
 networks:
   backend:
