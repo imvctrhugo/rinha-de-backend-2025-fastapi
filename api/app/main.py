@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 import httpx
 from fastapi import FastAPI
-from redis import Redis
+from redis.asyncio import Redis
 
 from .config import settings
 from .routes.payments import router as payments_router

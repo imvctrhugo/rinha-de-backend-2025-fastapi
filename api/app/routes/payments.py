@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status
-from redis import Redis
+from redis.asyncio import Redis
 
 from ..config import settings
 from ..models.payments import ProcessPaymentRequest
@@ -10,13 +10,13 @@ router = APIRouter(prefix="/payments")
 
 @router.post(
     path="",
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_202_ACCEPTED,
     summary="(Asynchronously) Process a payment request",
 )
 async def process_payment(
     request: ProcessPaymentRequest,
     redis: Redis = Depends(get_redis),
 ) -> None:
-    redis.rpush(settings.REDIS_QUEUE, request.model_dump_json())
+    await redis.rpush(settings.REDIS_QUEUE, request.model_dump_json())
 
     return
